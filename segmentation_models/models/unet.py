@@ -101,6 +101,88 @@ def DecoderTransposeX2Block(filters, stage, use_batchnorm=False):
 
     return layer
 
+def DecoderTransposeX2BlockWithoutBN(filters, stage, use_batchnorm=False):
+    transp_name = 'decoder_stage{}_transpose'.format(stage)
+    conv1_name = 'decoder_stage{}a'.format(stage)
+    conv2_name = 'decoder_stage{}b'.format(stage)
+    concat_name = 'decoder_stage{}_concat'.format(stage)
+
+    concat_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+
+    def wrapper(input_tensor, skip=None):
+        x = layers.Conv2DTranspose(
+            filters,
+            kernel_size=(4, 4),
+            strides=(2, 2),
+            padding='same',
+            name=transp_name,
+            use_bias=not use_batchnorm,
+        )(input_tensor)
+
+        if skip is not None:
+            x = layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
+
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv1_name)(x)
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv2_name)(x)
+
+        return x
+
+    return wrapper
+
+def DecoderTransposeX3Block(filters, stage, use_batchnorm=False):
+    transp_name = 'decoder_stage{}_transpose'.format(stage)
+    conv1_name = 'decoder_stage{}a'.format(stage)
+    conv2_name = 'decoder_stage{}b'.format(stage)
+    conv3_name = 'decoder_stage{}c'.format(stage)
+    concat_name = 'decoder_stage{}_concat'.format(stage)
+
+    concat_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+
+    def wrapper(input_tensor, skip=None):
+        x = layers.Conv2DTranspose(
+            filters,
+            kernel_size=(4, 4),
+            strides=(2, 2),
+            padding='same',
+            name=transp_name,
+            use_bias=not use_batchnorm,
+        )(input_tensor)
+
+        if skip is not None:
+            x = layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
+
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv1_name)(x)
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv2_name)(x)
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv3_name)(x)
+        return x
+
+    return wrapper
+
+def DecoderTransposeX1(filters, stage, use_batchnorm=False):
+    transp_name = 'decoder_stage{}a_transpose'.format(stage)
+    conv1_name = 'decoder_stage{}b'.format(stage)
+    concat_name = 'decoder_stage{}_concat'.format(stage)
+
+    concat_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+
+    def wrapper(input_tensor, skip=None):
+        x = layers.Conv2DTranspose(
+            filters,
+            kernel_size=(4, 4),
+            strides=(2, 2),
+            padding='same',
+            name=transp_name,
+            use_bias=not use_batchnorm,
+        )(input_tensor)
+
+        if skip is not None:
+            x = layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
+
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv1_name)(x)
+
+        return x
+
+    return wrapper
 
 # ---------------------------------------------------------------------
 #  Unet Decoder
@@ -214,6 +296,12 @@ def Unet(
         decoder_block = DecoderUpsamplingX2Block
     elif decoder_block_type == 'transpose':
         decoder_block = DecoderTransposeX2Block
+    elif decoder_block_type == 'transposewithoutbn':
+        decoder_block = DecoderTransposeX2BlockWithoutBN
+    elif decoder_block_type == 'transpose3':
+        decoder_block == DecoderTransposeX3Block
+    elif decoder_block_type == 'transpose1':
+        decoder_block == DecoderTransposeX1
     else:
         raise ValueError('Decoder block type should be in ("upsampling", "transpose"). '
                          'Got: {}'.format(decoder_block_type))

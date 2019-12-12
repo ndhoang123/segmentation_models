@@ -178,7 +178,7 @@ def DecoderTransposeX1(filters, stage, use_batchnorm=False):
         if skip is not None:
             x = layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
 
-        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv1_name)(x)
+        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv_name)(x)
 
         return x
 

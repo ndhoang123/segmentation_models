@@ -160,7 +160,7 @@ def DecoderTransposeX3Block(filters, stage, use_batchnorm=False):
 
 def DecoderTransposeX1(filters, stage, use_batchnorm=False):
     transp_name = 'decoder_stage{}a_transpose'.format(stage)
-    conv1_name = 'decoder_stage{}b'.format(stage)
+    conv_name = 'decoder_stage{}b'.format(stage)
     concat_name = 'decoder_stage{}_concat'.format(stage)
 
     concat_axis = 3 if backend.image_data_format() == 'channels_last' else 1
@@ -299,9 +299,9 @@ def Unet(
     elif decoder_block_type == 'transposewithoutbn':
         decoder_block = DecoderTransposeX2BlockWithoutBN
     elif decoder_block_type == 'transpose3':
-        decoder_block == DecoderTransposeX3Block
+        decoder_block = DecoderTransposeX3Block
     elif decoder_block_type == 'transpose1':
-        decoder_block == DecoderTransposeX1
+        decoder_block = DecoderTransposeX1
     else:
         raise ValueError('Decoder block type should be in ("upsampling", "transpose"). '
                          'Got: {}'.format(decoder_block_type))
